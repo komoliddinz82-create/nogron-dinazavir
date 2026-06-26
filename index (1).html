@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DinoRun</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0a0a0f; color: #fff; min-height: 100vh; overflow: hidden; }
+  #loginPage { position: fixed; inset: 0; background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a1a 100%); display: flex; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.6s ease; }
+  #loginPage.hidden { opacity: 0; pointer-events: none; }
+  .stars { position: absolute; inset: 0; overflow: hidden; }
+  .star { position: absolute; background: #fff; border-radius: 50%; animation: twinkle 3s infinite alternate; }
+  @keyframes twinkle { 0% { opacity: 0.2; } 100% { opacity: 1; } }
+  .login-container { position: relative; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 48px 44px; width: 420px; backdrop-filter: blur(20px); box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset; text-align: center; }
+  .dino-logo { font-size: 64px; margin-bottom: 8px; display: block; filter: drop-shadow(0 0 20px rgba(74,222,128,0.6)); animation: bounce-logo 2s ease-in-out infinite; }
+  @keyframes bounce-logo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .login-title { font-size: 32px; font-weight: 800; background: linear-gradient(90deg, #4ade80, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; }
+  .login-subtitle { font-size: 14px; color: rgba(255,255,255,0.45); margin-bottom: 36px; letter-spacing: 0.5px; }
+  .form-group { text-align: left; margin-bottom: 20px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+  .form-input { width: 100%; padding: 13px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 15px; font-family: inherit; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; outline: none; }
+  .form-input:focus { border-color: #4ade80; background: rgba(74,222,128,0.06); box-shadow: 0 0 0 3px rgba(74,222,128,0.15); }
+  .form-input::placeholder { color: rgba(255,255,255,0.22); }
+  .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #4ade80, #22d3ee); border: none; border-radius: 12px; color: #0a2010; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; margin-top: 8px; position: relative; overflow: hidden; }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(74,222,128,0.4); }
+  .login-btn:active { transform: translateY(0); }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+  .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+  .divider-text { font-size: 12px; color: rgba(255,255,255,0.3); }
+  .register-btn { width: 100%; padding: 13px; background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: rgba(255,255,255,0.7); font-size: 15px; font-weight: 500; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; font-family: inherit; }
+  .register-btn:hover { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.05); color: #4ade80; }
+  .login-error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #fca5a5; margin-top: 16px; display: none; }
+  #gamePage { position: fixed; inset: 0; display: none; flex-direction: column; background: #f0f0f0; }
+  #gamePage.active { display: flex; }
+  .game-header { background: #1a1a2e; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #4ade80; flex-shrink: 0; z-index: 10; }
+  .game-brand { font-size: 20px; font-weight: 800; background: linear-gradient(90deg, #4ade80, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: flex; align-items: center; gap: 8px; }
+  .game-brand span { font-size: 22px; filter: none; -webkit-text-fill-color: initial; }
+  .header-stats { display: flex; gap: 24px; align-items: center; }
+  .stat-item { text-align: center; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); }
+  .stat-value { font-size: 18px; font-weight: 700; color: #fff; }
+  .stat-value.hi { color: #4ade80; }
+  .player-info { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #4ade80, #22d3ee); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #0a2010; }
+  .player-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
+  .logout-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-left: 12px; transition: all 0.2s; font-family: inherit; }
+  .logout-btn:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+  .canvas-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f7f7f0; position: relative; }
+  #gameCanvas { display: block; border: 3px solid #1a1a2e; image-rendering: pixelated; box-shadow: 0 8px 32px rgba(0,0,0,0.25); max-width: 100%; }
+  .controls-hint { margin-top: 16px; display: flex; gap: 20px; font-size: 13px; color: #666; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .key-badge { background: #1a1a2e; color: #4ade80; border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
+  #registerPage { position: fixed; inset: 0; background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a1a 100%); display: none; align-items: center; justify-content: center; z-index: 100; }
+  #registerPage.active { display: flex; }
+  .register-container { position: relative; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 44px 44px; width: 420px; backdrop-filter: blur(20px); box-shadow: 0 32px 80px rgba(0,0,0,0.6); text-align: center; }
+  .back-btn { position: absolute; top: 20px; left: 20px; background: transparent; border: none; color: rgba(255,255,255,0.4); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; transition: color 0.2s; padding: 4px; }
+  .back-btn:hover { color: #4ade80; }
+  .reg-title { font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #4ade80, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; }
+  .reg-subtitle { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 32px; }
+  .success-msg { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #86efac; margin-top: 16px; display: none; }
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="stars" id="starsContainer"></div>
+  <div class="login-container">
+    <span class="dino-logo">🦕</span>
+    <h1 class="login-title">DinoRun</h1>
+    <p class="login-subtitle">O'yinga kirish</p>
+    <div class="form-group">
+      <label class="form-label">Foydalanuvchi nomi</label>
+      <input type="text" id="loginUsername" class="form-input" placeholder="ismingizni kiriting" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Parol</label>
+      <input type="password" id="loginPassword" class="form-input" placeholder="parolingizni kiriting">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🎮 O'yinni boshlash</button>
+    <div class="login-error" id="loginError">Foydalanuvchi nomi yoki parol noto'g'ri</div>
+    <div class="divider"><div class="divider-line"></div><div class="divider-text">yoki</div><div class="divider-line"></div></div>
+    <button class="register-btn" onclick="showRegister()">Yangi hisob yaratish</button>
+  </div>
+</div>
+
+<div id="registerPage">
+  <div class="register-container">
+    <button class="back-btn" onclick="showLogin()">← Orqaga</button>
+    <div style="font-size:48px; margin-bottom:8px">🦕</div>
+    <h2 class="reg-title">Ro'yxatdan o'tish</h2>
+    <p class="reg-subtitle">Yangi hisob yaratish</p>
+    <div class="form-group">
+      <label class="form-label">Foydalanuvchi nomi</label>
+      <input type="text" id="regUsername" class="form-input" placeholder="ism kiriting (3+ belgi)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Parol</label>
+      <input type="password" id="regPassword" class="form-input" placeholder="parol kiriting (4+ belgi)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Parolni tasdiqlang</label>
+      <input type="password" id="regPassword2" class="form-input" placeholder="parolni qayta kiriting">
+    </div>
+    <button class="login-btn" onclick="doRegister()">✅ Ro'yxatdan o'tish</button>
+    <div class="login-error" id="regError">Xato yuz berdi</div>
+    <div class="success-msg" id="regSuccess">Muvaffaqiyatli ro'yxatdan o'tdingiz! Endi kiring.</div>
+  </div>
+</div>
+
+<div id="gamePage">
+  <div class="game-header">
+    <div class="game-brand"><span>🦕</span> DinoRun</div>
+    <div class="header-stats">
+      <div class="stat-item"><div class="stat-label">Ball</div><div class="stat-value" id="scoreDisplay">0</div></div>
+      <div class="stat-item"><div class="stat-label">Eng yuqori</div><div class="stat-value hi" id="hiDisplay">0</div></div>
+      <div class="stat-item"><div class="stat-label">Tezlik</div><div class="stat-value" id="speedDisplay">1x</div></div>
+    </div>
+    <div class="player-info">
+      <div class="avatar" id="avatarEl">A</div>
+      <div class="player-name" id="playerNameEl">Mehmon</div>
+      <button class="logout-btn" onclick="doLogout()">Chiqish</button>
+    </div>
+  </div>
+  <div class="canvas-wrapper">
+    <canvas id="gameCanvas" width="800" height="300"></canvas>
+    <div class="controls-hint">
+      <span><span class="key-badge">SPACE</span> / <span class="key-badge">↑</span> Sakrash</span>
+      <span><span class="key-badge">↓</span> Egilish</span>
+      <span><span class="key-badge">Tap</span> Mobil uchun</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function getUsers(){try{return JSON.parse(localStorage.getItem('dinoUsers')||'{}')}catch(e){return{}}}
+function saveUsers(u){try{localStorage.setItem('dinoUsers',JSON.stringify(u))}catch(e){}}
+function getHiScore(u){try{return parseInt(localStorage.getItem('dinoHi_'+u)||'0')}catch(e){return 0}}
+function saveHiScore(u,s){try{localStorage.setItem('dinoHi_'+u,String(s))}catch(e){}}
+
+let currentUser=null;
+
+function createStars(){
+  const c=document.getElementById('starsContainer');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s;`;
+    c.appendChild(s);
+  }
+}
+createStars();
+
+function showLogin(){
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('loginPage').style.cssText='';
+  document.getElementById('registerPage').classList.remove('active');
+  document.getElementById('loginError').style.display='none';
+}
+function showRegister(){
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('registerPage').classList.add('active');
+  document.getElementById('regError').style.display='none';
+  document.getElementById('regSuccess').style.display='none';
+}
+function showError(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
+
+function doLogin(){
+  const username=document.getElementById('loginUsername').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const users=getUsers();
+  if(!username||!password){showError('loginError',"Iltimos, barcha maydonlarni to'ldiring");return;}
+  if(users[username]&&users[username].password===password){
+    currentUser=username;
+    document.getElementById('loginPage').classList.add('hidden');
+    setTimeout(()=>{document.getElementById('loginPage').style.display='none';},600);
+    document.getElementById('gamePage').classList.add('active');
+    document.getElementById('avatarEl').textContent=username.charAt(0).toUpperCase();
+    document.getElementById('playerNameEl').textContent=username;
+    document.getElementById('hiDisplay').textContent=getHiScore(username);
+    startGame();
+  } else {showError('loginError',"Foydalanuvchi nomi yoki parol noto'g'ri");}
+}
+
+function doRegister(){
+  const username=document.getElementById('regUsername').value.trim();
+  const password=document.getElementById('regPassword').value;
+  const password2=document.getElementById('regPassword2').value;
+  const users=getUsers();
+  if(username.length<3){showError('regError',"Ism kamida 3 ta belgi bo'lishi kerak");return;}
+  if(password.length<4){showError('regError',"Parol kamida 4 ta belgi bo'lishi kerak");return;}
+  if(password!==password2){showError('regError',"Parollar mos kelmadi");return;}
+  if(users[username]){showError('regError',"Bu foydalanuvchi nomi band");return;}
+  users[username]={password};saveUsers(users);
+  document.getElementById('regError').style.display='none';
+  document.getElementById('regSuccess').style.display='block';
+  setTimeout(()=>{
+    document.getElementById('regUsername').value='';
+    document.getElementById('regPassword').value='';
+    document.getElementById('regPassword2').value='';
+    document.getElementById('loginUsername').value=username;
+    showLogin();
+  },1500);
+}
+
+function doLogout(){
+  stopGame();currentUser=null;
+  document.getElementById('gamePage').classList.remove('active');
+  document.getElementById('loginPage').style.cssText='';
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('loginPassword').value='';
+}
+
+document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginUsername').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const W=800,H=300,GROUND=H-60,DINO_X=80;
+let gameState='idle',score=0,hiScore=0,speed=5,frameCount=0,animId=null,dayMode=true;
+let dino={y:GROUND,vy:0,h:52,w:44,jumping:false,ducking:false,legFrame:0,legTimer:0,dead:false};
+let obstacles=[],obstacleTimer=0,nextObstacle=80,groundX=0;
+let clouds=[{x:200,y:50,w:60,speed:0.4},{x:500,y:35,w:80,speed:0.3},{x:700,y:65,w:50,speed:0.5}];
+let stars=Array.from({length:30},()=>({x:Math.random()*W,y:Math.random()*(GROUND-40),r:Math.random()*1.5+0.5}));
+let moonX=W-80;
+
+function resetGame(){
+  dino={y:GROUND,vy:0,h:52,w:44,jumping:false,ducking:false,legFrame:0,legTimer:0,dead:false};
+  obstacles=[];obstacleTimer=0;nextObstacle=80;score=0;speed=5;frameCount=0;dayMode=true;moonX=W-80;
+  document.getElementById('scoreDisplay').textContent='0';
+  document.getElementById('speedDisplay').textContent='1x';
+}
+
+function jump(){
+  if(!dino.jumping&&!dino.ducking&&gameState==='running'){dino.vy=-15;dino.jumping=true;}
+  if(gameState==='idle'||gameState==='over'){resetGame();gameState='running';}
+}
+function duck(on){
+  if(!dino.jumping)dino.ducking=on;
+  dino.h=on?30:52;
+}
+
+document.addEventListener('keydown',e=>{
+  if(['Space','ArrowUp'].includes(e.code)){e.preventDefault();jump();}
+  if(e.code==='ArrowDown'){e.preventDefault();duck(true);}
+});
+document.addEventListener('keyup',e=>{if(e.code==='ArrowDown')duck(false);});
+canvas.addEventListener('click',()=>jump());
+canvas.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
+
+function spawnObstacle(){
+  const type=Math.random();
+  if(type<0.55){obstacles.push({x:W+20,type:'cactus',h:48+Math.random()*20|0,w:22,ground:true});}
+  else if(type<0.8){
+    const n=2+(Math.random()>0.5?1:0);
+    for(let i=0;i<n;i++)obstacles.push({x:W+20+i*26,type:'cactus',h:44,w:20,ground:true});
+  } else {
+    const bH=GROUND-60-Math.random()*70;
+    obstacles.push({x:W+20,type:'bird',h:28,w:44,y:bH,wingFrame:0,wingTimer:0});
+  }
+}
+
+function update(){
+  if(gameState!=='running')return;
+  frameCount++;score=Math.floor(frameCount/6);
+  speed=Math.min(5+score*0.008,14);
+  document.getElementById('scoreDisplay').textContent=score;
+  document.getElementById('speedDisplay').textContent=(speed/5).toFixed(1)+'x';
+  if(score>0&&score%400===0)dayMode=!dayMode;
+  if(dino.jumping){dino.vy+=0.9;dino.y+=dino.vy;if(dino.y>=GROUND){dino.y=GROUND;dino.vy=0;dino.jumping=false;}}
+  if(!dino.jumping){dino.legTimer++;if(dino.legTimer>8){dino.legFrame=1-dino.legFrame;dino.legTimer=0;}}
+  for(let c of clouds){c.x-=c.speed;if(c.x<-100){c.x=W+50;c.y=25+Math.random()*55;}}
+  moonX-=0.15;if(moonX<-60)moonX=W+60;
+  for(let s of stars){s.x-=0.08;if(s.x<0)s.x=W;}
+  groundX=(groundX-speed+1200)%1200;
+  obstacleTimer++;
+  if(obstacleTimer>=nextObstacle){spawnObstacle();obstacleTimer=0;nextObstacle=70+Math.random()*80+(80/(speed/5));}
+  for(let obs of obstacles){obs.x-=speed;if(obs.type==='bird'){obs.wingTimer++;if(obs.wingTimer>10){obs.wingFrame=1-obs.wingFrame;obs.wingTimer=0;}}}
+  obstacles=obstacles.filter(o=>o.x>-60);
+  for(let obs of obstacles){
+    const dT=dino.y-dino.h+4,dB=dino.y-4,dL=DINO_X+6,dR=DINO_X+dino.w-6;
+    let oT,oB,oL,oR;
+    if(obs.ground){oT=GROUND-obs.h+4;oB=GROUND;oL=obs.x+3;oR=obs.x+obs.w-3;}
+    else{oT=obs.y+4;oB=obs.y+obs.h-4;oL=obs.x+4;oR=obs.x+obs.w-4;}
+    if(dR>oL&&dL<oR&&dB>oT&&dT<oB){
+      gameState='over';
+      if(score>hiScore){hiScore=score;if(currentUser){saveHiScore(currentUser,hiScore);document.getElementById('hiDisplay').textContent=hiScore;}}
+      dino.dead=true;
+    }
+  }
+}
+
+function drawDino(){
+  const x=DINO_X,baseY=dino.y,h=dino.h,isDuck=dino.ducking,isDead=dino.dead;
+  ctx.save();
+  const bc=isDead?'#e74c3c':'#2d2d2d';
+  if(isDuck){
+    ctx.fillStyle=bc;
+    ctx.beginPath();ctx.roundRect(x,baseY-24,50,22,5);ctx.fill();
+    ctx.beginPath();ctx.roundRect(x+28,baseY-34,28,20,5);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+52,baseY-26,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(x+53,baseY-26,2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=bc;
+    const lo=dino.legFrame===0?-3:3;
+    ctx.fillRect(x+8,baseY-6,10,8);ctx.fillRect(x+26+lo,baseY-6,10,8);
+    ctx.beginPath();ctx.moveTo(x,baseY-20);ctx.lineTo(x-12,baseY-12);ctx.lineTo(x-6,baseY-8);ctx.closePath();ctx.fill();
+  } else {
+    ctx.fillStyle=bc;
+    ctx.beginPath();ctx.roundRect(x+2,baseY-h+14,36,28,6);ctx.fill();
+    ctx.beginPath();ctx.roundRect(x+16,baseY-h,28,24,6);ctx.fill();
+    ctx.fillRect(x+16,baseY-h+20,12,10);
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+38,baseY-h+9,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(x+39,baseY-h+9,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=bc;
+    ctx.beginPath();ctx.roundRect(x+24,baseY-h+28,12,8,3);ctx.fill();
+    ctx.beginPath();ctx.moveTo(x+2,baseY-h+26);ctx.lineTo(x-14,baseY-h+20);ctx.lineTo(x-8,baseY-h+32);ctx.closePath();ctx.fill();
+    if(!dino.jumping){
+      if(dino.legFrame===0){ctx.fillRect(x+6,baseY-14,10,14);ctx.fillRect(x+24,baseY-10,10,10);}
+      else{ctx.fillRect(x+10,baseY-10,10,10);ctx.fillRect(x+20,baseY-14,10,14);}
+    } else {ctx.fillRect(x+6,baseY-16,10,16);ctx.fillRect(x+20,baseY-12,10,12);}
+  }
+  ctx.restore();
+}
+
+function drawCactus(obs){
+  const x=obs.x,h=obs.h,baseY=GROUND,w=obs.w;
+  ctx.save();ctx.fillStyle='#3a7d44';
+  ctx.beginPath();ctx.roundRect(x+(w/2)-5,baseY-h,10,h,3);ctx.fill();
+  ctx.beginPath();ctx.roundRect(x,baseY-h*0.6,8,h*0.35,3);ctx.fill();
+  ctx.fillRect(x,baseY-h*0.6,8,8);
+  ctx.beginPath();ctx.roundRect(x,baseY-h*0.6-16,8,18,3);ctx.fill();
+  ctx.beginPath();ctx.roundRect(x+w-6,baseY-h*0.5,8,h*0.28,3);ctx.fill();
+  ctx.beginPath();ctx.roundRect(x+w-6,baseY-h*0.5-12,8,14,3);ctx.fill();
+  ctx.restore();
+}
+
+function drawBird(obs){
+  const x=obs.x,y=obs.y,wf=obs.wingFrame;
+  ctx.save();ctx.fillStyle='#555';ctx.strokeStyle='#555';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.ellipse(x+22,y+14,14,9,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#e67e22';
+  ctx.beginPath();ctx.moveTo(x+36,y+13);ctx.lineTo(x+46,y+14);ctx.lineTo(x+36,y+16);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+30,y+12,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#222';ctx.beginPath();ctx.arc(x+31,y+12,1.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#444';
+  if(wf===0){
+    ctx.beginPath();ctx.moveTo(x+12,y+10);ctx.quadraticCurveTo(x+22,y-10,x+32,y+8);ctx.quadraticCurveTo(x+22,y+4,x+12,y+10);ctx.fill();
+  } else {
+    ctx.beginPath();ctx.moveTo(x+12,y+14);ctx.quadraticCurveTo(x+22,y+30,x+32,y+16);ctx.quadraticCurveTo(x+22,y+18,x+12,y+14);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCloud(c){
+  ctx.save();ctx.fillStyle=dayMode?'rgba(255,255,255,0.9)':'rgba(180,180,200,0.25)';
+  const x=c.x,y=c.y,w=c.w;
+  ctx.beginPath();ctx.arc(x+w*0.3,y,w*0.22,0,Math.PI*2);ctx.arc(x+w*0.55,y-w*0.08,w*0.28,0,Math.PI*2);ctx.arc(x+w*0.78,y,w*0.20,0,Math.PI*2);ctx.rect(x+w*0.1,y,w*0.8,w*0.22);ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.fillStyle=dayMode?'#f7f7f0':'#0a0a1e';ctx.fillRect(0,0,W,H);
+  if(!dayMode){
+    ctx.fillStyle='rgba(255,255,255,0.8)';
+    for(let s of stars){ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle='#ffe57a';ctx.beginPath();ctx.arc(moonX,55,20,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#0a0a1e';ctx.beginPath();ctx.arc(moonX+10,50,15,0,Math.PI*2);ctx.fill();
+  } else {
+    ctx.fillStyle='#ffe566';ctx.beginPath();ctx.arc(W-80,55,22,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#ffcf00';ctx.lineWidth=2;
+    for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2;ctx.beginPath();ctx.moveTo(W-80+Math.cos(a)*28,55+Math.sin(a)*28);ctx.lineTo(W-80+Math.cos(a)*36,55+Math.sin(a)*36);ctx.stroke();}
+  }
+  for(let c of clouds)drawCloud(c);
+  ctx.fillStyle=dayMode?'#d4c89a':'#1a1a3a';ctx.fillRect(0,GROUND,W,H-GROUND);
+  ctx.strokeStyle=dayMode?'#bba87a':'#2a2a4a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,GROUND);ctx.lineTo(W,GROUND);ctx.stroke();
+  ctx.fillStyle=dayMode?'rgba(0,0,0,0.08)':'rgba(255,255,255,0.06)';
+  for(let i=0;i<40;i++){const gx=((i*30-groundX*0.5)%(W+30)+W+30)%(W+30)-15;ctx.fillRect(gx,GROUND+6+(i%3)*5,3,3);}
+  for(let obs of obstacles){if(obs.type==='cactus')drawCactus(obs);else drawBird(obs);}
+  drawDino();
+  ctx.save();ctx.font='bold 16px monospace';
+  ctx.fillStyle=dayMode?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.3)';
+  ctx.fillText('HI '+String(hiScore).padStart(5,'0'),W-150,30);
+  ctx.fillText(String(score).padStart(5,'0'),W-60,30);
+  ctx.restore();
+  if(gameState==='idle'){
+    ctx.fillStyle='rgba(0,0,0,0.35)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff';ctx.font='bold 28px sans-serif';ctx.textAlign='center';
+    ctx.fillText('🦕 DINORUN',W/2,H/2-30);
+    ctx.font='16px sans-serif';ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.fillText('Boshlash uchun SPACE bosing yoki ustiga bosing',W/2,H/2+10);
+    ctx.textAlign='left';
+  }
+  if(gameState==='over'){
+    ctx.fillStyle='rgba(0,0,0,0.45)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#e74c3c';ctx.font='bold 30px sans-serif';ctx.textAlign='center';
+    ctx.fillText("O'YIN TUGADI!",W/2,H/2-30);
+    ctx.fillStyle='#fff';ctx.font='18px sans-serif';ctx.fillText('Ball: '+score,W/2,H/2+5);
+    ctx.font='14px sans-serif';ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.fillText("Qayta o'ynash uchun SPACE bosing",W/2,H/2+35);
+    if(score>=hiScore&&score>0){ctx.fillStyle='#4ade80';ctx.font='bold 15px sans-serif';ctx.fillText('🏆 Yangi rekord!',W/2,H/2+60);}
+    ctx.textAlign='left';
+  }
+}
+
+function loop(){update();draw();animId=requestAnimationFrame(loop);}
+function startGame(){hiScore=currentUser?getHiScore(currentUser):0;document.getElementById('hiDisplay').textContent=hiScore;resetGame();gameState='idle';if(animId)cancelAnimationFrame(animId);loop();}
+function stopGame(){if(animId){cancelAnimationFrame(animId);animId=null;}gameState='idle';}
+</script>
+</body>
+</html>
